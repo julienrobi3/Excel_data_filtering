@@ -54,7 +54,7 @@ def clean_data_excel(file, var, cut_rol, sheet=None, cut_neighboor=None, rol_num
     return df
 
 
-def generate_graph(df, var, cut_rol, rol_num=2, cut_neighboor=None):
+def generate_graph(df, var, cut_rol, rol_num=2, cut_neighboor=None, info=False):
     '''
     Pas le temps de commenter! À suivre...
     Args:
@@ -68,28 +68,23 @@ def generate_graph(df, var, cut_rol, rol_num=2, cut_neighboor=None):
 
     '''
     df.reset_index(inplace=True)
-    plt.figure()
-
+    fig = plt.figure()
+    ax = fig.add_axes([0, 0, 1, 1])
     # Create a scatter plot
-    plt.scatter(df.index, df[var], s=1)
-
-    # Add text to it.
-    plt.text(0, 1, f"Nombre de données pour rolling mean: {rol_num}\nDifférence max entre valeur et rolling mean:"
-                   f" {cut_rol}", transform=plt.gca().transAxes)
-    if cut_neighboor is not None:
-        plt.text(0, 0.90,
-                 f"Données avec différence > {cut_neighboor}\navec les valeurs voisines ont été "
-                 f"retirées", transform=plt.gca().transAxes)
-    else:
-        plt.text(0, 0.9, f"La filtration par valeur\nvoisine n'a pas été effectuée", transform=plt.gca().transAxes)
+    ax.scatter(df.index, df[var], s=1)
+    if info:
+        # Add text to it.
+        fig.text(0, 0.95, f"Nombre de données pour rolling mean: {rol_num}\nDifférence max entre valeur et rolling mean:"
+                       f" {cut_rol}", transform=plt.gca().transAxes)
+        if cut_neighboor is not None:
+            fig.text(0, 0.90,
+                     f"Données avec différence > {cut_neighboor}\navec les valeurs voisines ont été "
+                     f"retirées", transform=plt.gca().transAxes)
+        else:
+            fig.text(0, 0.9, f"La filtration par valeur\nvoisine n'a pas été effectuée", transform=plt.gca().transAxes)
     plt.show()
 
 
 
-# Only for testing:
-if __name__ == '__main__':
-    clean_df = clean_data_excel('ARUTUA_2019.xlsx', 'Chlorophylle', sheet='Raw', rol_num=20, cut_rol=1,
-                                cut_neighboor=0.3)
-    clean_df.reset_index(inplace=True)
-    plt.scatter(clean_df.index, clean_df.Chlorophylle, s=1)
-    plt.show()
+
+
