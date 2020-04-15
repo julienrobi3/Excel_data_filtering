@@ -11,14 +11,15 @@ class ExcelData:
                   the first one.
         """
         self.source_df = pd.read_excel(file, sheet_name=sheet)
-        self.clean_df = None
+        self.temp_df = None
+        self.clean_df = self.source_df
 
         # Store variables in attributes. But first, initialize in the __init__
         self.var = ''
         self.cut_mov = None
         self.mov_num = None
 
-    def remove_outlier_moving_average(self, var, cut_mov, mov_num=2):
+    def remove_outliers_moving_average(self, var, cut_mov, mov_num=2):
         """Uses pandas module to perform a simple moving average on a variable of an Excel spreadsheet. It will perform
         analysis by converting the file into a pandas dataframe.
 
@@ -43,31 +44,35 @@ class ExcelData:
 
         # MOVING AVERAGE - REMOVAL OF OUTLIERS
 
-        self.clean_df = self.source_df
+        self.temp_df = self.source_df
         # 1. Creates a new column containing the values of the moving average with the number of values specified
         # in mov_num.
-        self.clean_df['r_mean'] = self.clean_df[var].rolling(mov_num, center=True, min_periods=round(mov_num / 3)).mean()
+        self.temp_df['r_mean'] = self.temp_df[self.var].rolling(mov_num, center=True, min_periods=round(mov_num /
+                                                                                                          3)).mean()
 
         # 2. For every values of your variable, it will compare it to the moving average value and will replace
         # it by NaN if the difference is greater than cut_mov.
-        self.clean_df[var].where((abs(self.clean_df[var] - self.clean_df['r_mean']) < cut_mov), inplace=True)
+        self.temp_df[self.var].where((abs(self.temp_df[self.var] - self.temp_df['r_mean']) < self.cut_mov),
+                                      inplace=True)
 
         # 3. Delete the column r_mean used for the moving average
-        self.clean_df.drop('r_mean', axis=1, inplace=True)
+        # self.temp_df.drop('r_mean', axis=1, inplace=True)
 
         # Print the number of data after the filtering performed.
-        print(f"The number of data left after filtering is {self.clean_df[var].count()}")
+        print(f"The number of data left after filtering is {self.temp_df[self.var].count()}")
+        print(f"\nNote that your changes for column {self.var} have not been saved yet.\n"
+              f"To do so, please use the method save_changes.")
 
     def view_clean_data(self, info=False):
-        '''
+        """
         Pas le temps de commenter! À suivre...
         Returns:
-        '''
-        self.clean_df.reset_index(inplace=True)
+        """
+        self.temp_df.reset_index(inplace=True)
         fig = plt.figure()
         ax = fig.add_axes([0.05, 0.05, 0.90, 0.90])
         # Create a scatter plot
-        ax.scatter(self.clean_df.index, self.clean_df[self.var], s=1)
+        ax.scatter(self.temp_df.index, self.temp_df[self.var], s=1)
 
         # set title
         ax.set_title(f"Data after removing outliers on column {self.var}")
@@ -76,16 +81,31 @@ class ExcelData:
             # Add text to it.
             fig.text(0, 0.85,
                      f"Number of data left after outliers removal is:"
-                     f" {self.clean_df[self.var].count()} / {len(self.source_df)} \n"
+                     f" {self.temp_df[self.var].count()} / {len(self.source_df)} \n"
                      f"Number of data for moving average: {self.mov_num}\nMax difference between value and "
                      f"moving average: {self.cut_mov}", transform=plt.gca().transAxes)
         plt.show()
+
+    def save_changes(self):
+        if self.temp_df is not None:
+            self.clean_df[self.var] = self.temp_df[self.var]
+            print(f"Changes from column name {self.var} have been correctly saved.\n"
+                  f"To export the changes in a new Excel file, please use the save_to_new_file method")
+        else:
+            print('No new changes have been saved')
+        self.temp_df = None
+
+    def save_to_new_file(self, name_file, sheet_name='clean'):
+        self.clean_df.to_excel(f"{name_file}.xlsx", sheet_name)
+
+    def save_to_new_sheet(self):
+        pass
 
 
 # Only for testing:
 if __name__ == '__main__':
 
     data1 = ExcelData('C:\\Users\\client\\OneDrive\\certificat_info\\Tahiti_donnees\\ARUTUA_2019.xlsx', 'Raw')
-    data1.remove_outlier_moving_average('Chlorophylle', 2, 30)
+    data1.remove_outliers_moving_average('Chlorophylle', 0.5, 60)
     data1.view_clean_data(info=True)
 
