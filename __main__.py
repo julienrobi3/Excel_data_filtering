@@ -1,10 +1,12 @@
+# This is an example of how someone could use this project (so far).
+
 import pandas as pd
 import matplotlib.pyplot as plt
 from filtrer_donnees import ExcelData
 
 if __name__ == '__main__':
-    # Load the file
 
+    # Load the file
     data1 = ExcelData('ARUTUA_2019.xlsx', sheet='Raw')
     print(type(data1.source_df))
 
