@@ -2,6 +2,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 
+
 class ExcelData:
     def __init__(self, file, sheet=None):
         """
@@ -11,7 +12,7 @@ class ExcelData:
                   the first one.
         """
         self.source_df = pd.read_excel(file, sheet_name=sheet)
-        print(type(self.source_df))
+        # print(type(self.source_df))
         self.temp_df = None
         self.clean_df = self.source_df.copy(deep=True)  # Copy the source df to the clean one.
 
@@ -121,6 +122,49 @@ class ExcelData:
                             f"Number of data for moving average: {self.mov_num}\nMax difference between value and "
                             f"moving average: {self.cut_mov}", transform=plt.gca().transAxes)
             plt.show()
+
+    def view_data_by_sections(self, section_ref, data):
+        """
+        View data grouped in specific sections. It can be the date, the ID of the instrument used, site, etc.
+        Args:
+            section_ref (str): Name of the column of the dataframe to use for sectioning your data to plot.
+            data (str): Name of the column of the data to plot.
+
+        Returns: subplots of the different sections
+
+        """
+        unique = list(self.source_df[section_ref].unique())
+        print(type(unique))
+        number = len(unique)
+        print(number)
+
+        while unique:
+            if number//9 != 0:
+                ind = 0
+                fig, axes = plt.subplots(3, 3, figsize=(16, 9))
+                for section in unique[0:9]:
+                    data_to_plot = self.source_df[self.source_df[section_ref] == section]
+                    # it makes it a one dimensional array, so I can use ind
+                    axes.flatten()[ind].scatter(list(range(len(data_to_plot))), data_to_plot[data], s=1)
+                    axes.flatten()[ind].set_title(f"{data} for {section_ref} {section}")
+                    ind += 1
+                plt.tight_layout()
+                plt.show()
+                unique[0:9]=[]
+            else:
+                ind=0
+                fig, axes = plt.subplots(3, 3, figsize=(16, 9))
+                for section in unique:
+                    data_to_plot = self.source_df[self.source_df[section_ref] == section]
+                    # it makes it a one dimensional array, so I can use ind
+                    axes.flatten()[ind].scatter(list(range(len(data_to_plot))), data_to_plot[data], s=1)
+                    axes.flatten()[ind].set_title(f"{data} for {section_ref} {section}")
+                    ind += 1
+                unique = []
+                plt.tight_layout()
+                plt.show()
+
+
 
     def save_changes(self):
         if self.temp_df is not None:
